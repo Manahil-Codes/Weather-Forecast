@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WeatherPro - Advanced Forecast</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <!-- Leaflet Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+    <div class="app-wrapper">
+
+        <!-- ============ SIDEBAR NAV ============ -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fa-solid fa-cloud-sun-rain"></i>
+                <span>WeatherPro</span>
+            </div>
+            <nav>
+                <button class="nav-btn active" data-tab="dashboard">
+                    <i class="fa-solid fa-house"></i> Dashboard
+                </button>
+                <button class="nav-btn" data-tab="report">
+                    <i class="fa-solid fa-chart-line"></i> Report
+                </button>
+                <button class="nav-btn" data-tab="map">
+                    <i class="fa-solid fa-map-location-dot"></i> Global Map
+                </button>
+                <button class="nav-btn" data-tab="alerts">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Alerts
+                    <span id="alertBadge" class="badge hidden">0</span>
+                </button>
+                <button class="nav-btn" data-tab="travel">
+                    <i class="fa-solid fa-plane"></i> Travel Plan
+                </button>
+                <button class="nav-btn" data-tab="activity">
+                    <i class="fa-solid fa-person-running"></i> Activity
+                </button>
+                <button class="nav-btn" data-tab="settings">
+                    <i class="fa-solid fa-gear"></i> Settings
+                </button>
+            </nav>
+            <button id="themeToggle" class="theme-btn">
+                <i class="fa-solid fa-moon"></i> Dark Mode
+            </button>
+        </aside>
+
+        <!-- ============ MAIN CONTENT ============ -->
+        <main class="main-content">
+
+            <!-- Top Bar -->
+            <div class="topbar">
+                <div class="search-box">
+                    <input type="text" id="cityInput" placeholder="Search any city..." />
+                    <button id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    <button id="locationBtn" title="My location">
+                        <i class="fa-solid fa-location-crosshairs"></i>
+                    </button>
+                </div>
+                <div class="unit-toggle">
+                    <button id="celsiusBtn" class="active">°C</button>
+                    <button id="fahrenheitBtn">°F</button>
+                </div>
+            </div>
+
+            <!-- Loading & Error -->
+            <div id="loading" class="loading hidden">
+                <i class="fa-solid fa-spinner fa-spin"></i> Loading...
+            </div>
+            <div id="error" class="error hidden"></div>
+
+            <!-- ========= TAB: DASHBOARD ========= -->
+            <section id="tab-dashboard" class="tab-panel active">
+                <div class="current-weather card">
+                    <div class="weather-main">
+                        <h2 id="cityName">City</h2>
+                        <p id="dateTime"></p>
+                        <div class="temp-box">
+                            <img id="weatherIcon" src="" alt="icon" />
+                            <h1 id="temperature">--°</h1>
+                        </div>
+                        <p id="condition">--</p>
+                    </div>
+                    <div class="weather-details">
+                        <div class="detail-card">
+                            <i class="fa-solid fa-droplet"></i>
+                            <p>Humidity</p>
+                            <h3 id="humidity">--%</h3>
+                        </div>
+                        <div class="detail-card">
+                            <i class="fa-solid fa-wind"></i>
+                            <p>Wind</p>
+                            <h3 id="windSpeed">-- km/h</h3>
+                        </div>
+                        <div class="detail-card">
+                            <i class="fa-solid fa-temperature-low"></i>
+                            <p>Feels Like</p>
+                            <h3 id="feelsLike">--°</h3>
+                        </div>
+                        <div class="detail-card">
+                            <i class="fa-solid fa-gauge"></i>
+                            <p>Pressure</p>
+                            <h3 id="pressure">-- hPa</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2><i class="fa-solid fa-calendar-days"></i> 5-Day Forecast</h2>
+                    <div id="forecastContainer" class="forecast-container"></div>
+                </div>
+            </section>
+
+            <!-- ========= TAB: REPORT ========= -->
+            <section id="tab-report" class="tab-panel">
+                <div class="card">
+                    <h2><i class="fa-solid fa-chart-line"></i> General Weather Report</h2>
+                    <div id="reportContent" class="report-grid"></div>
+                </div>
+                <div class="card">
+                    <h2><i class="fa-solid fa-chart-column"></i> Temperature Trend (Next 7 Days)</h2>
+                    <div id="tempChart" class="chart-box"></div>
+                </div>
+            </section>
+
+            <!-- ========= TAB: MAP ========= -->
+            <section id="tab-map" class="tab-panel">
+                <div class="card">
+                    <h2><i class="fa-solid fa-globe"></i> Global Weather Map</h2>
+                    <p style="opacity:0.7;margin-bottom:10px;">Click anywhere on the map to see weather at that location.</p>
+                    <div id="map" class="map-box"></div>
+                    <div id="mapWeatherInfo" class="map-info hidden"></div>
+                </div>
+            </section>
+
+            <!-- ========= TAB: ALERTS ========= -->
+            <section id="tab-alerts" class="tab-panel">
+                <div class="card">
+                    <h2><i class="fa-solid fa-triangle-exclamation"></i> Weather Alerts</h2>
+                    <div id="alertsContainer"></div>
+                </div>
+            </section>
+
+            <!-- ========= TAB: TRAVEL ========= -->
+            <section id="tab-travel" class="tab-panel">
+                <div class="card">
+                    <h2><i class="fa-solid fa-plane-departure"></i> Travel Plan Weather</h2>
+                    <div class="travel-inputs">
+                        <input type="text" id="travelFrom" placeholder="From city (e.g. Karachi)" />
+                        <input type="text" id="travelTo" placeholder="To city (e.g. Islamabad)" />
+                        <button id="compareBtn"><i class="fa-solid fa-arrows-left-right"></i> Compare</button>
+                    </div>
+                    <div id="travelResults" class="travel-results"></div>
+                </div>
+            </section>
+
+            <!-- ========= TAB: ACTIVITY ========= -->
+            <section id="tab-activity" class="tab-panel">
+                <div class="card">
+                    <h2><i class="fa-solid fa-person-running"></i> Best Activities Today</h2>
+                    <p style="opacity:0.7;margin-bottom:15px;">Based on current weather in <span id="activityCity">--</span></p>
+                    <div id="activityContainer" class="activity-grid"></div>
+                </div>
+            </section>
+
+            <!-- ========= TAB: SETTINGS ========= -->
+            <section id="tab-settings" class="tab-panel">
+                <div class="card">
+                    <h2><i class="fa-solid fa-gear"></i> Settings</h2>
+
+                    <div class="setting-row">
+                        <label>Default City</label>
+                        <input type="text" id="defaultCityInput" placeholder="e.g. Lahore" />
+                    </div>
+
+                    <div class="setting-row">
+                        <label>Temperature Unit</label>
+                        <select id="unitSelect">
+                            <option value="celsius">Celsius (°C)</option>
+                            <option value="fahrenheit">Fahrenheit (°F)</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>Auto Refresh (minutes)</label>
+                        <select id="refreshSelect">
+                            <option value="0">Off</option>
+                            <option value="5">5 min</option>
+                            <option value="10">10 min</option>
+                            <option value="30">30 min</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>Theme</label>
+                        <select id="themeSelect">
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>Save Favorites</label>
+                        <div id="favoritesList" class="favorites-list"></div>
+                    </div>
+
+                    <button id="saveSettingsBtn" class="primary-btn">
+                        <i class="fa-solid fa-floppy-disk"></i> Save Settings
+                    </button>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
